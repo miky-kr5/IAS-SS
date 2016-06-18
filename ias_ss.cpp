@@ -34,20 +34,30 @@ const std::string HOST_NAME = "localhost";
 const uint32_t    PORT = 6666;
 const uint32_t    NUM_ROBOTS = 4;
 
+static bool done = false;
+
 extern "C" {
+  void handler(int signal) {
+    done = true;
+  }
+  
   void * robot_thread(void * arg) {
     IASSS_Robot * robot = static_cast<IASSS_Robot *>(arg);
 
     std::cout << "Running robot thread." << std::endl;
-    robot->run();
+
+    while(!done)
+      robot->run();
 
     return NULL;
   }
 }
 
 int main(int argc, char **argv) {
-  pthread_t                robot_threads[NUM_ROBOTS];
-  std::vector<IASSS_Robot *>    robots;
+  pthread_t                  robot_threads[NUM_ROBOTS];
+  std::vector<IASSS_Robot *> robots;
+
+  signal(SIGINT, handler);
   
   try {
     // Initialize the robot objects and threads.

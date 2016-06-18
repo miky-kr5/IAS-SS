@@ -1,5 +1,5 @@
 CXX = g++
-TARGET = ias_ss
+TARGET = ias-ss
 OBJECTS = ias_ss.o robot.o
 CFLAGS = -ansi -pedantic -Wall -g `pkg-config --cflags playerc++` -g
 LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread
