@@ -1,0 +1,46 @@
+include "map.inc"
+include "ant_bot.inc"
+
+window
+(
+  size [ 635.000 666.000 ] # in pixels
+  scale 36.995   # pixels per meter
+  center [ -0.040  -0.274 ]
+  rotate [ 0  0 ]
+  			
+  show_data 1              # 1=on 0=off
+)
+
+floorplan
+(
+	bitmap "maps/cave.png"
+	size [ 16.000 16.000 1.000 ]
+)
+
+ant_bot
+(
+	name "ant_robot_1"
+	pose [ -6.432 -5.895 0 45.000 ]
+	color "green"
+)
+
+ant_bot
+(
+	name "ant_robot_2"
+	pose [ 6.432 -3.895 0 135.000 ]
+	color "green"
+)
+
+ant_bot
+(
+	name "ant_robot_3"
+	pose [ -6.432 5.895 0 -45.000 ]
+	color "green"
+)
+
+ant_bot
+(
+	name "ant_robot_4"
+	pose [ 6.432 5.895 0 -135.000 ]
+	color "green"
+)

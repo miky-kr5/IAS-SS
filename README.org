@@ -1,0 +1,16 @@
+* IAS-SS
+
+** Abstract
+IAS-SS (Inverse Ant System-based Surveillance System) is a [[http://playerstage.sourceforge.net/][Player/Stage]] based C++ implementation of the bio-inspired control architecture presented in the
+following papers:
+
+  1) R. Calvo et al. "/Inverse ACO for Exploration and Surveillance in Unknown Environments/", The Third International Conference on Advanced Cognitive Technologies and Applications, Rome, Italy 2011.
+  2) R. Calvo et al. "/A Distributed, Bio-Inspired Coordination Strategy for Multiple Agent Systems Applied to Surveillance Tasks in Unknown Environments/", Proc. of the IEEE IJCNN, San Jose, USA, 2011.
+
+This is being developed as part of the Robotics and Bio-Inspired Learning graduate course at UCV.
+
+Future versions of this README file will include a technical report on the developed software.
+
+** Notes
+
+The file ~maps/cave.png~ is part of the standard Stage distribution.
