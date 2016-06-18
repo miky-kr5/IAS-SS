@@ -12,8 +12,8 @@ window
 
 floorplan
 (
-	bitmap "maps/cave.png"
-	size [ 16.000 16.000 1.500 ]
+	bitmap "maps/hospital_section.png"
+	size [ 64 26 1.500 ]
 )
 
 ant_bot
