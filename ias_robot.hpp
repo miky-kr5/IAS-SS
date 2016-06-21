@@ -23,19 +23,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                      *
  *************************************************************************************/
 
+#ifndef IAS_ROBOT_HPP
+#define IAS_ROBOT_HPP
+
 #include "robot.hpp"
 
-Robot::Robot(std::string hostname, uint32_t port) {
-  _p_client = new PlayerCc::PlayerClient(hostname, port);
-  _p_proxy  = new PlayerCc::Position2dProxy(_p_client, 0);
-  _r_proxy  = new PlayerCc::RangerProxy(_p_client, 0);
-  _p_proxy->RequestGeom();
-  _r_proxy->RequestGeom();
-  _r_proxy->RequestConfigure();
-}
+/**
+ * Concrete robot that implements the IAS-SS architecture as defined in:
+ *
+ *   1) R. Calvo et al. "Inverse ACO for Exploration and Surveillance in
+ *      Unknown Environments", The Third International Conference on Advanced
+ *      Cognitive Technologies and Applications, Rome, Italy 2011.
+ *
+ *   2) R. Calvo et al. "A Distributed, Bio-Inspired Coordination Strategy
+ *      for Multiple Agent Systems Applied to Surveillance Tasks in Unknown
+ *      Environments", Proc. of the IEEE IJCNN, San Jose, USA, 2011.
+ */
+class IASSS_Robot : Robot {
+public:
+  IASSS_Robot(std::string hostname, uint32_t port);
+  virtual ~IASSS_Robot();
 
-Robot::~Robot() {
-  delete _p_proxy;
-  delete _r_proxy;
-  delete _p_client;
-}
+  virtual void run();
+};
+
+#endif

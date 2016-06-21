@@ -1,19 +1,47 @@
+# Copyright (c) 2016, Miguel Angel Astor Romero
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 CXX = g++
 TARGET = ias-ss
-OBJECTS = ias_ss.o robot.o
-CFLAGS = -ansi -pedantic -Wall -g `pkg-config --cflags playerc++` -g
+OBJECTS = ias_ss.o robot.o ias_robot.o
+DEPENDS = $(OBJECTS:.o=.d)
+CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++`
 LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread
 
+all: CXXFLAGS += -O2 -D_NDEBUG
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS)
-	$(CXX) $(CFLAGS) -o $(TARGET) $(OBJECTS) $(LDLIBS)
+debug: CXXFLAGS += -g
+debug: $(TARGET)
 
--include $(OBJECTS:.o=.d)
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS) $(LDLIBS)
+
+-include $(DEPENDS)
 
 %.o: %.cpp
-	$(CXX) -c $(CFLAGS) $*.cpp -o $*.o
-	$(CXX) -MM $(CFLAGS) $*.cpp > $*.d
+	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
+	$(CXX) -MM $(CXXFLAGS) $*.cpp > $*.d
 
 clean:
-	$(RM) $(TARGET) $(OBJECTS) *.d
+	$(RM) $(TARGET) $(OBJECTS) $(DEPENDS)

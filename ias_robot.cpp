@@ -23,19 +23,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                      *
  *************************************************************************************/
 
-#include "robot.hpp"
+#include "ias_robot.hpp"
 
-Robot::Robot(std::string hostname, uint32_t port) {
-  _p_client = new PlayerCc::PlayerClient(hostname, port);
-  _p_proxy  = new PlayerCc::Position2dProxy(_p_client, 0);
-  _r_proxy  = new PlayerCc::RangerProxy(_p_client, 0);
-  _p_proxy->RequestGeom();
-  _r_proxy->RequestGeom();
-  _r_proxy->RequestConfigure();
+IASSS_Robot::IASSS_Robot(std::string hostname, uint32_t port) : Robot(hostname, port) {
+  std::cout << "Creating IAS-SS robot on host \"" << hostname << "\" and port " << port << "." << std::endl;
 }
 
-Robot::~Robot() {
-  delete _p_proxy;
-  delete _r_proxy;
-  delete _p_client;
+IASSS_Robot::~IASSS_Robot() {
+  std::cout << "Destroying IAS-SS robot." << std::endl;
+}
+
+void IASSS_Robot::run() {
+  _p_client->Read();
+  
+  if(_r_proxy->GetRange(1) < 1.0) {
+    if(_r_proxy->GetRange(0) > 1.0)
+      _p_proxy->SetSpeed(0.0f, PlayerCc::dtor(-45));
+    else if(_r_proxy->GetRange(2) > 1.0)
+      _p_proxy->SetSpeed(0.0f, PlayerCc::dtor(45));
+    else
+      _p_proxy->SetSpeed(0.0f, PlayerCc::dtor(180));
+  } else {
+    _p_proxy->SetSpeed(0.3f, 0.0f);
+  }
+  sleep(1);
 }

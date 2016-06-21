@@ -46,23 +46,4 @@ protected:
   PlayerCc::RangerProxy *     _r_proxy;
 };
 
-/**
- * Concrete robot that implements the IAS-SS architecture as defined in:
- *
- *   1) R. Calvo et al. "Inverse ACO for Exploration and Surveillance in
- *      Unknown Environments", The Third International Conference on Advanced
- *      Cognitive Technologies and Applications, Rome, Italy 2011.
- *
- *   2) R. Calvo et al. "A Distributed, Bio-Inspired Coordination Strategy
- *      for Multiple Agent Systems Applied to Surveillance Tasks in Unknown
- *      Environments", Proc. of the IEEE IJCNN, San Jose, USA, 2011.
- */
-class IASSS_Robot : Robot{
-public:
-  IASSS_Robot(std::string hostname, uint32_t port);
-  virtual ~IASSS_Robot();
-
-  virtual void run();
-};
-
 #endif

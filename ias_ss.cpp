@@ -28,10 +28,9 @@
 #include <cstdlib>
 #include <csignal>
 
-#include "robot.hpp"
+#include "ias_robot.hpp"
 
-const std::string HOST_NAME = "localhost";
-const uint32_t    PORT = 6666;
+const uint32_t    PORT = PlayerCc::PLAYER_PORTNUM + 1;
 const uint32_t    NUM_ROBOTS = 4;
 
 static bool done = false;
@@ -62,7 +61,7 @@ int main(int argc, char **argv) {
   try {
     // Initialize the robot objects and threads.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
-      robots.push_back(new IASSS_Robot(HOST_NAME, PORT + i));
+      robots.push_back(new IASSS_Robot(PlayerCc::PLAYER_HOSTNAME, PORT + i));
 
       if(pthread_create(&robot_threads[i], NULL, robot_thread, static_cast<void *>(robots[i])) != 0) {
 	perror("Could not create robot thread");
