@@ -35,21 +35,19 @@ const uint32_t    NUM_ROBOTS = 4;
 
 static bool done = false;
 
-extern "C" {
-  void handler(int signal) {
-    done = true;
-  }
+extern "C" void handler(int signal) {
+  done = true;
+}
   
-  void * robot_thread(void * arg) {
-    IASSS_Robot * robot = static_cast<IASSS_Robot *>(arg);
+extern "C" void * robot_thread(void * arg) {
+  IASSS_Robot * robot = static_cast<IASSS_Robot *>(arg);
 
-    std::cout << "Running robot thread." << std::endl;
+  std::cout << "Running robot thread." << std::endl;
 
-    while(!done)
-      robot->run();
+  while(!done)
+    robot->run();
 
-    return NULL;
-  }
+  return NULL;
 }
 
 int main(int argc, char **argv) {

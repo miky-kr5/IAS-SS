@@ -26,9 +26,13 @@
 #include "robot.hpp"
 
 Robot::Robot(std::string hostname, uint32_t port) {
+  _host_name = hostname;
+  _port = port;
+
   _p_client = new PlayerCc::PlayerClient(hostname, port);
   _p_proxy  = new PlayerCc::Position2dProxy(_p_client, 0);
   _r_proxy  = new PlayerCc::RangerProxy(_p_client, 0);
+
   _p_proxy->RequestGeom();
   _r_proxy->RequestGeom();
   _r_proxy->RequestConfigure();

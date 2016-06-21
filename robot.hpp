@@ -41,6 +41,8 @@ public:
   virtual void run() = 0;
   
 protected:
+  int                         _port;
+  std::string                 _host_name;
   PlayerCc::PlayerClient *    _p_client;
   PlayerCc::Position2dProxy * _p_proxy;
   PlayerCc::RangerProxy *     _r_proxy;
