@@ -28,8 +28,11 @@
 
 #include "ias_robot.hpp"
 
+static const float  TURN_DEG_PER_SEC = 40.0f;
+static const float  METERS_PER_SEC   = 0.4f;
 static const long   HALF_SECOND_USEC = 500000;
 static const double MIN_DIST_M       = 1.5;
+static const double CRIT_DIST_M       = 1.0;
 
 IASSS_Robot::IASSS_Robot(std::string hostname, uint32_t port) : Robot(hostname, port) {
   std::cout << "Creating IAS-SS robot on host \"" << hostname << "\" and port " << port << "." << std::endl;
@@ -44,8 +47,6 @@ void IASSS_Robot::run() {
   long   then, now, delta, wait;
   struct timeval tv;
   double dist   = std::numeric_limits<double>::infinity();
-  double dist_l = 0.0;
-  double dist_r = 0.0;
 
   _p_client->Read();
   rv = gettimeofday(&tv, NULL);
@@ -57,21 +58,12 @@ void IASSS_Robot::run() {
   for(int i = 96; i < 126; i++)
     dist = _r_proxy->GetRange(i) < dist ? _r_proxy->GetRange(i) : dist;
 
-  if(dist < MIN_DIST_M) {
-    for(unsigned int i = 0; i < 96; i++)
-      dist_r += _r_proxy->GetRange(i);
-    dist_r /= 96;
-
-    for(unsigned int i = 126; i < _r_proxy->GetRangeCount(); i++)
-      dist_l += _r_proxy->GetRange(i);
-    dist_l /= (_r_proxy->GetRangeCount() - 126);
-
-    if(dist_r >= dist_l)
-      _p_proxy->SetSpeed(0.0f, PlayerCc::dtor(-20));
-    else
-      _p_proxy->SetSpeed(0.0f, PlayerCc::dtor(20));
+  if(dist < MIN_DIST_M && dist > CRIT_DIST_M) {
+    avoid_wall(METERS_PER_SEC, TURN_DEG_PER_SEC);
+  } else if(dist < CRIT_DIST_M) {
+    avoid_wall(0.0f, TURN_DEG_PER_SEC);
   } else
-    _p_proxy->SetSpeed(0.4f, 0.0f);
+    _p_proxy->SetSpeed(METERS_PER_SEC, 0.0f);
   /******************************************************************************
    * WALL AVOIDANCE END                                                         *
    ******************************************************************************/
@@ -82,4 +74,22 @@ void IASSS_Robot::run() {
   // Sleep for a bit before finishing this control iteration.
   wait = rv == 0 ? HALF_SECOND_USEC - delta : HALF_SECOND_USEC;
   usleep(wait);
+}
+
+void IASSS_Robot::avoid_wall(float front_speed, float turn_speed) {
+  double dist_l = 0.0;
+  double dist_r = 0.0;
+
+  for(unsigned int i = 0; i < 96; i++)
+    dist_r += _r_proxy->GetRange(i);
+  dist_r /= 96;
+
+  for(unsigned int i = 126; i < _r_proxy->GetRangeCount(); i++)
+    dist_l += _r_proxy->GetRange(i);
+  dist_l /= (_r_proxy->GetRangeCount() - 126);
+
+  if(dist_r >= dist_l)
+    _p_proxy->SetSpeed(front_speed, PlayerCc::dtor(-turn_speed));
+  else
+    _p_proxy->SetSpeed(front_speed, PlayerCc::dtor(turn_speed));
 }

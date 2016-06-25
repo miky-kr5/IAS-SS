@@ -23,10 +23,10 @@
 
 CXX = g++
 TARGET = ias-ss
-OBJECTS = ias_ss.o robot.o ias_robot.o
+OBJECTS = ias_ss.o robot.o ias_robot.o gui.o
 DEPENDS = $(OBJECTS:.o=.d)
 CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++`
-LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread
+LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread -lGLU -lGL -lfltk -lfltk_gl
 
 all: CXXFLAGS += -O2 -D_NDEBUG
 all: $(TARGET)

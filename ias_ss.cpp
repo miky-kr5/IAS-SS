@@ -28,12 +28,17 @@
 #include <cstdlib>
 #include <csignal>
 
+#include "gui.hpp"
 #include "ias_robot.hpp"
 
-const uint32_t    PORT = PlayerCc::PLAYER_PORTNUM + 1;
-const uint32_t    NUM_ROBOTS = 4;
+const char * TITLE = "Pheromone map";
+const int W = 256;
+const int H = 256;
+const uint32_t PORT = PlayerCc::PLAYER_PORTNUM + 1;
+const uint32_t NUM_ROBOTS = 4;
 
 static bool done = false;
+static Fl_Window * window;
 
 extern "C" void handler(int signal) {
   done = true;
@@ -50,12 +55,20 @@ extern "C" void * robot_thread(void * arg) {
   return NULL;
 }
 
+void create_gui(int argc, char **argv) {
+  window = new Fl_Window(20, 40, W, H, TITLE);
+  new GlGui(window, 0, 0, W, H, TITLE);
+  window->end();
+  window->show(argc, argv);
+  window->make_current();
+}
+
 int main(int argc, char **argv) {
   pthread_t                  robot_threads[NUM_ROBOTS];
   std::vector<IASSS_Robot *> robots;
 
   signal(SIGINT, handler);
-  
+
   try {
     // Initialize the robot objects and threads.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
@@ -67,6 +80,9 @@ int main(int argc, char **argv) {
       }
     }
 
+    create_gui(argc, argv);
+    Fl::run();
+    
     // Wait for all the robots to finish.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
       if(pthread_join(robot_threads[i], NULL) != 0) {

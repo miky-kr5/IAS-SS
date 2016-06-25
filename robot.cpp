@@ -43,3 +43,7 @@ Robot::~Robot() {
   delete _r_proxy;
   delete _p_client;
 }
+
+void Robot::log(std::string msg) {
+  std::cout << "ROBOT(" << _host_name << ":" << _port << ") - " << msg << std::endl;
+}

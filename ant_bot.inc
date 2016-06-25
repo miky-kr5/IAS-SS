@@ -51,6 +51,5 @@ define ant_bot position
 
 	drive "diff"
 	localization "gps"
-
 	ant_sonars()
 )

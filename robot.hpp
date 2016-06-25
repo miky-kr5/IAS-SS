@@ -46,6 +46,8 @@ protected:
   PlayerCc::PlayerClient *    _p_client;
   PlayerCc::Position2dProxy * _p_proxy;
   PlayerCc::RangerProxy *     _r_proxy;
+
+  void log(std::string msg);
 };
 
 #endif

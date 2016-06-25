@@ -45,6 +45,9 @@ public:
   virtual ~IASSS_Robot();
 
   virtual void run();
+
+private:
+  void avoid_wall(float front_speed, float turn_speed);
 };
 
 #endif
