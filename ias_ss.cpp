@@ -37,11 +37,18 @@ const int H = 256;
 const uint32_t PORT = PlayerCc::PLAYER_PORTNUM + 1;
 const uint32_t NUM_ROBOTS = 4;
 
-static bool done = false;
-static Fl_Window * window;
+static bool           done = false;
+static Fl_Window *    window = NULL;
+static GlGui *        glWindow = NULL;
+static PheromoneMap * phero_map = NULL;
 
 extern "C" void handler(int signal) {
   done = true;
+
+  if(window != NULL) {
+    glWindow->finish();
+    window->hide();
+  }
 }
   
 extern "C" void * robot_thread(void * arg) {
@@ -57,7 +64,7 @@ extern "C" void * robot_thread(void * arg) {
 
 void create_gui(int argc, char **argv) {
   window = new Fl_Window(20, 40, W, H, TITLE);
-  new GlGui(window, 0, 0, W, H, TITLE);
+  glWindow = new GlGui(window, 0, 0, W, H, TITLE, phero_map);
   window->end();
   window->show(argc, argv);
   window->make_current();
@@ -70,9 +77,11 @@ int main(int argc, char **argv) {
   signal(SIGINT, handler);
 
   try {
+    phero_map = new PheromoneMap("maps/cave_mask.png");
+
     // Initialize the robot objects and threads.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
-      robots.push_back(new IASSS_Robot(PlayerCc::PLAYER_HOSTNAME, PORT + i));
+      robots.push_back(new IASSS_Robot(PlayerCc::PLAYER_HOSTNAME, PORT + i, phero_map));
 
       if(pthread_create(&robot_threads[i], NULL, robot_thread, static_cast<void *>(robots[i])) != 0) {
 	perror("Could not create robot thread");
@@ -93,6 +102,8 @@ int main(int argc, char **argv) {
     }
     robots.clear();
 
+    delete phero_map;
+    
   } catch (PlayerCc::PlayerError & e) {
     std::cerr << e << std::endl;
     return EXIT_FAILURE;

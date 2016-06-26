@@ -27,6 +27,7 @@
 #define IAS_ROBOT_HPP
 
 #include "robot.hpp"
+#include "pheromone.hpp"
 
 /**
  * Concrete robot that implements the IAS-SS architecture as defined in:
@@ -41,12 +42,13 @@
  */
 class IASSS_Robot : Robot {
 public:
-  IASSS_Robot(std::string hostname, uint32_t port);
+  IASSS_Robot(std::string hostname, uint32_t port, PheromoneMap * phero_map);
   virtual ~IASSS_Robot();
-
   virtual void run();
 
 private:
+  PheromoneMap * _phero_map;
+  
   void avoid_wall(float front_speed, float turn_speed);
 };
 

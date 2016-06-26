@@ -34,12 +34,13 @@ static const long   HALF_SECOND_USEC = 500000;
 static const double MIN_DIST_M       = 1.5;
 static const double CRIT_DIST_M       = 1.0;
 
-IASSS_Robot::IASSS_Robot(std::string hostname, uint32_t port) : Robot(hostname, port) {
-  std::cout << "Creating IAS-SS robot on host \"" << hostname << "\" and port " << port << "." << std::endl;
+IASSS_Robot::IASSS_Robot(std::string hostname, uint32_t port, PheromoneMap * phero_map) : Robot(hostname, port) {
+  _phero_map = phero_map;
+  log("Creating IAS-SS robot");
 }
 
 IASSS_Robot::~IASSS_Robot() {
-  std::cout << "Destroying IAS-SS robot on " << _host_name << ":" << _port << std::endl;
+  log("Destroying IAS-SS robot");
 }
 
 void IASSS_Robot::run() {
@@ -70,7 +71,7 @@ void IASSS_Robot::run() {
   rv = gettimeofday(&tv, NULL);
   now = tv.tv_usec;
   delta = now - then;
-
+  
   // Sleep for a bit before finishing this control iteration.
   wait = rv == 0 ? HALF_SECOND_USEC - delta : HALF_SECOND_USEC;
   usleep(wait);

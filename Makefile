@@ -21,12 +21,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+CC = gcc
 CXX = g++
 TARGET = ias-ss
-OBJECTS = ias_ss.o robot.o ias_robot.o gui.o
+OBJECTS = ias_ss.o robot.o ias_robot.o gui.o ogl.o GLSLProgram.o pnglite.o pheromone.o
 DEPENDS = $(OBJECTS:.o=.d)
-CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++`
-LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread -lGLU -lGL -lfltk -lfltk_gl
+CFLAGS = -ansi -pedantic -Wall -I./include
+CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++` -I./include
+LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread -lz -lGLEW -lGLU -lGL -lfltk -lfltk_gl
 
 all: CXXFLAGS += -O2 -D_NDEBUG
 all: $(TARGET)
@@ -38,6 +40,9 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS) $(LDLIBS)
 
 -include $(DEPENDS)
+
+pnglite.o: pnglite.c
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 %.o: %.cpp
 	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
