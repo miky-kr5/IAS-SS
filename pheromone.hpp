@@ -1,8 +1,9 @@
 #ifndef PHEROMONE_HPP
 #define PHEROMONE_HPP
 
-#include <GL/gl.h>
+#include <ctime>
 #include <semaphore.h>
+#include <GL/gl.h>
 
 class PheromoneMap {
 public:
@@ -10,15 +11,18 @@ public:
   ~PheromoneMap();
 
   GLuint s_build_texture();
+  void s_draw_point(float x, float y);
+  void s_update();
   
 private:
   unsigned char * data;
   unsigned        m_width;
   unsigned        m_height;
   unsigned char   m_bpp;
-  sem_t map_semaphore;
-  bool tex_created;
-  GLuint handle;
+  sem_t           map_semaphore;
+  bool            tex_created;
+  GLuint          handle;
+  clock_t         then;
 
   void load_map(const char * file_name);
 };

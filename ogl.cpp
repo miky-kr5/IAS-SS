@@ -28,7 +28,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <pnglite.h>
 
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
@@ -41,21 +40,24 @@ namespace ogl
   static CGLSLProgram m_program;
   static PheromoneMap * m_phero_map = NULL;
   static GLuint m_textureHandle;
+  static GLuint m_gradientHandle;
 
   // Quad definition
   static glm::vec4 vec_points[6];
   static glm::vec2 vec_tex_coords[6];
   
   static void quad() {
-    vec_tex_coords[0] = glm::vec2( 0.0f,  0.0f); vec_points[0] = glm::vec4( -0.5f, -0.5f, 0.0f, 1.0f );
-    vec_tex_coords[1] = glm::vec2( 0.0f,  1.0f); vec_points[1] = glm::vec4( -0.5f,  0.5f, 0.0f, 1.0f );
-    vec_tex_coords[2] = glm::vec2( 1.0f,  0.0f); vec_points[2] = glm::vec4(  0.5f, -0.5f, 0.0f, 1.0f );
-    vec_tex_coords[3] = glm::vec2( 1.0f,  0.0f); vec_points[3] = glm::vec4(  0.5f, -0.5f, 0.0f, 1.0f );
-    vec_tex_coords[4] = glm::vec2( 0.0f,  1.0f); vec_points[4] = glm::vec4( -0.5f,  0.5f, 0.0f, 1.0f );
-    vec_tex_coords[5] = glm::vec2( 1.0f,  1.0f); vec_points[5] = glm::vec4(  0.5f,  0.5f, 0.0f, 1.0f );
+    vec_tex_coords[0] = glm::vec2( 0.0f,  1.0f); vec_points[0] = glm::vec4( -0.5f, -0.5f, 0.0f, 1.0f );
+    vec_tex_coords[1] = glm::vec2( 0.0f,  0.0f); vec_points[1] = glm::vec4( -0.5f,  0.5f, 0.0f, 1.0f );
+    vec_tex_coords[2] = glm::vec2( 1.0f,  1.0f); vec_points[2] = glm::vec4(  0.5f, -0.5f, 0.0f, 1.0f );
+    vec_tex_coords[3] = glm::vec2( 1.0f,  1.0f); vec_points[3] = glm::vec4(  0.5f, -0.5f, 0.0f, 1.0f );
+    vec_tex_coords[4] = glm::vec2( 0.0f,  0.0f); vec_points[4] = glm::vec4( -0.5f,  0.5f, 0.0f, 1.0f );
+    vec_tex_coords[5] = glm::vec2( 1.0f,  0.0f); vec_points[5] = glm::vec4(  0.5f,  0.5f, 0.0f, 1.0f );
   }
 
   void initialize(PheromoneMap * phero_map) {
+    glEnable(GL_TEXTURE_2D);
+
     glewInit();
 
     quad();
@@ -74,7 +76,7 @@ namespace ogl
 
   void display() {
     glClear(GL_COLOR_BUFFER_BIT);
-    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     if(m_phero_map != NULL)
       m_textureHandle = m_phero_map->s_build_texture(); // Good grief!
@@ -82,7 +84,7 @@ namespace ogl
     m_program.enable();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-    glUniform1i(m_program.getLocation("sTexture"), 0);
+    glUniform1i(m_program.getLocation("sTexture"), GL_TEXTURE0);
 
     glBegin(GL_TRIANGLES); {
       for(int i = 0; i < 6; i++) {

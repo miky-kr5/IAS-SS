@@ -32,7 +32,8 @@ static const float  TURN_DEG_PER_SEC = 40.0f;
 static const float  METERS_PER_SEC   = 0.4f;
 static const long   HALF_SECOND_USEC = 500000;
 static const double MIN_DIST_M       = 1.5;
-static const double CRIT_DIST_M       = 1.0;
+static const double CRIT_DIST_M      = 1.0;
+static const float  MAP_SIZE         = 16.0f;
 
 IASSS_Robot::IASSS_Robot(std::string hostname, uint32_t port, PheromoneMap * phero_map) : Robot(hostname, port) {
   _phero_map = phero_map;
@@ -45,6 +46,7 @@ IASSS_Robot::~IASSS_Robot() {
 
 void IASSS_Robot::run() {
   int    rv;
+  float  x, y;
   long   then, now, delta, wait;
   struct timeval tv;
   double dist   = std::numeric_limits<double>::infinity();
@@ -71,7 +73,13 @@ void IASSS_Robot::run() {
   rv = gettimeofday(&tv, NULL);
   now = tv.tv_usec;
   delta = now - then;
-  
+
+  if(_phero_map != NULL) {
+    x = (_p_proxy->GetXPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+    y = (_p_proxy->GetYPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+    _phero_map->s_draw_point(x, y);
+  }
+
   // Sleep for a bit before finishing this control iteration.
   wait = rv == 0 ? HALF_SECOND_USEC - delta : HALF_SECOND_USEC;
   usleep(wait);

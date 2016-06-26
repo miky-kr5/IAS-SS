@@ -28,44 +28,35 @@
 #include "gui.hpp"
 #include "ogl.hpp"
 
-static const int REFRESH_MS = 0.016; // for 60 fps.
-
 static void redraw_callback(void * arg) {
   GlGui * window = static_cast<GlGui *>(arg);
   window->redraw();
-  if(!window->isFinished())
-    Fl::repeat_timeout(REFRESH_MS, redraw_callback, window);
 }
 
 GlGui::GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, PheromoneMap * phero_map) : Fl_Gl_Window(x, y, w, h, l) {
+  mode(FL_RGB | FL_DOUBLE);
+
   this->parent = parent;
   this->phero_map = phero_map;
   title += l;
   initialized = false;
-  done = false;
+
+  Fl::add_idle(redraw_callback, this);
 }
 
 void GlGui::draw() {
   if(!valid()) {
     if(!initialized) {
       ogl::initialize(phero_map);
-      Fl::add_timeout(REFRESH_MS, redraw_callback, this);
       initialized = true;
     }
     ogl::reshape(w(), h());
   }
 
+  phero_map->s_update();
   ogl::display();
 }
 
 int GlGui::handle(int event) {
   return Fl_Gl_Window::handle(event);
-}
-
-void GlGui::finish() {
-  done = true;
-}
-
-bool GlGui::isFinished() {
-  return done;
 }

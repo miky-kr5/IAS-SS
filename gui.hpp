@@ -37,8 +37,6 @@
 class GlGui : public Fl_Gl_Window {
 public:
   GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, PheromoneMap * phero_map);
-  void finish();
-  bool isFinished();
 
 protected:
   virtual void draw();
@@ -48,7 +46,6 @@ private:
   Fl_Window * parent;
   std::string title;
   bool initialized;
-  bool done;
   PheromoneMap * phero_map;
 };
 

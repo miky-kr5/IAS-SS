@@ -44,11 +44,6 @@ static PheromoneMap * phero_map = NULL;
 
 extern "C" void handler(int signal) {
   done = true;
-
-  if(window != NULL) {
-    glWindow->finish();
-    window->hide();
-  }
 }
   
 extern "C" void * robot_thread(void * arg) {
@@ -56,8 +51,10 @@ extern "C" void * robot_thread(void * arg) {
 
   std::cout << "Running robot thread." << std::endl;
 
-  while(!done)
+  while(!done) {
     robot->run();
+    pthread_testcancel();
+  }
 
   return NULL;
 }
@@ -92,7 +89,10 @@ int main(int argc, char **argv) {
     create_gui(argc, argv);
     Fl::run();
     
-    // Wait for all the robots to finish.
+    // Finish all the robots.
+    for(uint32_t i = 0; i < NUM_ROBOTS; ++i)
+      pthread_cancel(robot_threads[i]);
+
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
       if(pthread_join(robot_threads[i], NULL) != 0) {
 	perror("Could not join robot thread");
