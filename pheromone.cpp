@@ -26,6 +26,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
+#include <cassert>
 #include <pnglite.h>
 #include <glm/glm.hpp>
 
@@ -33,9 +34,17 @@
 
 #define MAP_POS(X, Y) (data[((X) * m_height) + (Y)])
 
-static const float         EVAPORATION_RATE    = 0.1f;
-const        unsigned char MAX_PHERO_INTENSITY = 250;
+static const float         EVAPORATION_RATE    = 0.05f;
+const        unsigned char MAX_PHERO_INTENSITY = 255;
 const        unsigned char MIN_PHERO_INTENSITY = 1;
+
+static inline int sign(float f) {
+  return (f < 0.0f) ? -1 : ((f > 0.0f) ? 1 : 0);
+}
+
+static inline int side(glm::vec3 line, glm::vec3 v) {
+  return sign(glm::cross(line, v).z);
+}
 
 PheromoneMap::PheromoneMap(const char * file_name) {
   load_map(file_name);
@@ -99,12 +108,11 @@ bool PheromoneMap::s_deposit_pheromone(float x, float y) {
 
   if((y > 1.0 || y < 0.0) || (x > 1.0 || x < 0.0))
     return false;
-  
+  if((_y >= m_height || _y < 0) || (_x >= m_width || _x < 0))
+    return false;
+
   sem_wait(&map_semaphore); {
-    if((_y >= m_height || _y < 0) || (_x >= m_width || _x < 0))
-      return false;
-    
-    if(MAP_POS(_y, _x) <= MAX_PHERO_INTENSITY) {
+    if(MAP_POS(_y, _x) >= MIN_PHERO_INTENSITY) {
       MAP_POS(_y, _x) = MAX_PHERO_INTENSITY;
       valid = true;
     }
@@ -125,7 +133,7 @@ void PheromoneMap::s_evaporate() {
   sem_wait(&map_semaphore); {
     for(unsigned i = 1; i < m_height - 1; i++) {
       for(unsigned j = 1; j < m_width - 1; j++) {
-	if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY) {
+	if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY) {
 	  p_eva = MAP_POS(i, j) * EVAPORATION_RATE;
 	  MAP_POS(i, j) -= p_eva;
 	}
@@ -135,18 +143,22 @@ void PheromoneMap::s_evaporate() {
 }
 
 void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius) {
-  float       _x = x;
-  float       _y = y;
-  float     _r = radius;
+  float     _x = x;
+  float     _y = y;
   float     dist;
   float     cos_theta;
+  float     ang;
   glm::vec2 v;
   glm::vec2 vp;
+  glm::vec3 line;
+  glm::vec3 v3d;
 
   if(sensor == NULL)
     return;
   else {
-    v  = glm::vec2(_r * cos(yaw), _r * sin(yaw)) - glm::vec2(0.0, 0.0);
+    sensor->reset();
+
+    v  = glm::vec2(radius * cos(yaw), radius * sin(yaw)) - glm::vec2(0.0, 0.0);
     v  = glm::normalize(v);
     
     sem_wait(&map_semaphore); {
@@ -157,14 +169,28 @@ void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw
 	  vp        = glm::normalize(vp);
 	  cos_theta = glm::dot(vp, v);
 
-	  if(cos_theta > 0.0f && dist <= _r) {
-	    if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY) {
-	      MAP_POS(i, j) = MAX_PHERO_INTENSITY;
+	  if(cos_theta > 0.0f && dist <= radius) {
+	    ang  = acos(cos_theta);
+	    line = glm::vec3(v.x, v.y, 0.0f);
+	    v3d  = glm::vec3(vp.x, vp.y, 0.0f);
+	    if(side(line, v3d) > 0) {
+	      assert(static_cast<unsigned int>(90.0f - ang) <= 90);
+	      sensor->samples[static_cast<unsigned int>(90.0f - ang)] += MAP_POS(i, j);
+	      sensor->sample_amnt[static_cast<unsigned int>(90.0f - ang)] += 1;
+	      //MAP_POS(i, j) = MAX_PHERO_INTENSITY;
+	    } else {
+	      assert(static_cast<unsigned int>(90.0f + ang) < 180);
+	      sensor->samples[static_cast<unsigned int>(90.0f + ang)] += MAP_POS(i, j);
+	      sensor->sample_amnt[static_cast<unsigned int>(90.0f + ang)] += 1;
+	      //MAP_POS(i, j) = MAX_PHERO_INTENSITY;
 	    }
 	  } else
 	    continue;
 	}
       }
     } sem_post(&map_semaphore);
+
+    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++)
+      sensor->samples[i] = (sensor->sample_amnt[i] > 0) ? (sensor->samples[i] / sensor->sample_amnt[i]) : 0.0f;
   }
 }

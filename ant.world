@@ -42,27 +42,27 @@ floorplan
 ant_bot
 (
 	name "ant_robot_1"
-	pose [ -4.044 7.232 0.000 5.000 ]
+	pose [ -6.432 -5.895 0 45.000 ]
 	color "green"
 )
 
 ant_bot
 (
 	name "ant_robot_2"
-	pose [ -5.443 -5.199 0.000 111.000 ]
+	pose [ 6.432 -3.895 0 135.000 ]
 	color "green"
 )
 
 ant_bot
 (
 	name "ant_robot_3"
-	pose [ -3.915 3.631 0.000 151.000 ]
+	pose [ -6.432 5.895 0 -45.000 ]
 	color "green"
 )
 
 ant_bot
 (
 	name "ant_robot_4"
-	pose [ -0.310 5.411 0.000 77.000 ]
+	pose [ 6.432 5.895 0 -135.000 ]
 	color "green"
 )

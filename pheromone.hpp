@@ -37,17 +37,38 @@ extern const unsigned char MIN_PHERO_INTENSITY;
 const unsigned int NUM_PHERO_SAMPLES = 180;
 
 typedef struct PHERO_SENSOR {
-  float samples[NUM_PHERO_SAMPLES];
+  float        samples[NUM_PHERO_SAMPLES];
+  unsigned int sample_amnt[NUM_PHERO_SAMPLES];
+  float        probs[NUM_PHERO_SAMPLES];
 
   PHERO_SENSOR() {
-    memset(this->samples, 0.0f, NUM_PHERO_SAMPLES);
+    reset();
+  }
+
+  void reset() {
+    memset(sample_amnt, 0, sizeof(unsigned int) * NUM_PHERO_SAMPLES);
+    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+      samples[i] = 0.0f;
+      probs[i]   = 0.0f;
+    }
+  }
+
+  void set_probabilities() {
+    float phero_sum = 0.0f;
+
+    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++)
+      phero_sum += samples[i];
+    
+    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+      probs[i] = 1.0f / (samples[i] / phero_sum);
+    }
   }
   
   float operator[](unsigned int index) {
     if(index >= NUM_PHERO_SAMPLES)
       return -1.0f;
     else
-      return this->samples[index];
+      return samples[index];
   }
 } phero_sensor_t;
 

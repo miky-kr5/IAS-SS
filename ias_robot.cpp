@@ -36,7 +36,7 @@ static const long   HALF_SECOND_USEC = 500000;
 static const double MIN_DIST_M       = 1.5;
 static const double CRIT_DIST_M      = 1.0;
 static const float  MAP_SIZE         = 16.0f;
-static const int    PHERO_AMOUNT     = 10;
+static const int    PHERO_AMOUNT     = 25;
 static const float  PHERO_RADIUS     = 1.0;
 static const float  SENSOR_RADIUS    = 2.0;
 
@@ -59,12 +59,16 @@ void IASSS_Robot::run() {
   int    rv;
   long   then, now, delta, wait;
   struct timeval tv;
-  double dist   = std::numeric_limits<double>::infinity();
+  double dist = std::numeric_limits<double>::infinity();
 
   _p_client->Read();
 
   rv = gettimeofday(&tv, NULL);
   then = tv.tv_usec;
+
+  x = (_p_proxy->GetXPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+  y = (_p_proxy->GetYPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+  _phero_map->s_sample(&_phero_sensor, x, y, _p_proxy->GetYaw(), SENSOR_RADIUS / MAP_SIZE);
 
   /******************************************************************************
    * WALL AVOIDANCE START                                                       *
@@ -75,17 +79,13 @@ void IASSS_Robot::run() {
 
   if(dist < MIN_DIST_M && dist > CRIT_DIST_M) {
     avoid_wall(METERS_PER_SEC, TURN_DEG_PER_SEC);
-  } else if(dist < CRIT_DIST_M) {
+  } else if(dist <= CRIT_DIST_M) {
     avoid_wall(0.0f, TURN_DEG_PER_SEC);
   } else
     _p_proxy->SetSpeed(METERS_PER_SEC, 0.0f);
   /******************************************************************************
    * WALL AVOIDANCE END                                                         *
    ******************************************************************************/
-
-  x = (_p_proxy->GetXPos() + (MAP_SIZE / 2)) / MAP_SIZE;
-  y = (_p_proxy->GetYPos() + (MAP_SIZE / 2)) / MAP_SIZE;
-  _phero_map->s_sample(&_phero_sensor, x, y, _p_proxy->GetYaw(), SENSOR_RADIUS / MAP_SIZE);
   
   deposit_pheromone();
 
@@ -109,7 +109,7 @@ void IASSS_Robot::avoid_wall(float front_speed, float turn_speed) {
   for(unsigned int i = 126; i < _r_proxy->GetRangeCount(); i++)
     dist_l += _r_proxy->GetRange(i);
   dist_l /= (_r_proxy->GetRangeCount() - 126);
-
+  
   if(dist_r >= dist_l)
     _p_proxy->SetSpeed(front_speed, PlayerCc::dtor(-turn_speed));
   else
