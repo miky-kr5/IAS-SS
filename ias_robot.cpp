@@ -130,11 +130,11 @@ void IASSS_Robot::deposit_pheromone() {
 	py = (py + (MAP_SIZE / 2)) / MAP_SIZE;
 	if(!_phero_map->s_deposit_pheromone(px, py)) {
 	  i--;
-	  continue;
+	  break;
 	}
       } else {
 	i--;
-	continue;
+	break;
       }
     }
   }

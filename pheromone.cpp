@@ -94,10 +94,16 @@ GLuint PheromoneMap::s_build_texture() {
 
 bool PheromoneMap::s_deposit_pheromone(float x, float y) {
   bool valid = false;
-  int  _x    = m_width * x;
-  int  _y    = m_height - (m_height * y);
+  unsigned int  _x    = m_width * x;
+  unsigned int  _y    = m_height - (m_height * y);
 
+  if((y > 1.0 || y < 0.0) || (x > 1.0 || x < 0.0))
+    return false;
+  
   sem_wait(&map_semaphore); {
+    if((_y >= m_height || _y < 0) || (_x >= m_width || _x < 0))
+      return false;
+    
     if(MAP_POS(_y, _x) <= MAX_PHERO_INTENSITY) {
       MAP_POS(_y, _x) = MAX_PHERO_INTENSITY;
       valid = true;
@@ -129,9 +135,9 @@ void PheromoneMap::s_evaporate() {
 }
 
 void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius) {
-  int       _x = m_width * x;
-  int       _y = m_height - (m_height * y);
-  float     _r = m_width * radius;
+  float       _x = x;
+  float       _y = y;
+  float     _r = radius;
   float     dist;
   float     cos_theta;
   glm::vec2 v;
@@ -140,13 +146,13 @@ void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw
   if(sensor == NULL)
     return;
   else {
-    v  = glm::vec2(_r * cos(yaw), - _r * sin(yaw)) - glm::vec2(0.0, 0.0);
+    v  = glm::vec2(_r * cos(yaw), _r * sin(yaw)) - glm::vec2(0.0, 0.0);
     v  = glm::normalize(v);
-
+    
     sem_wait(&map_semaphore); {
       for(unsigned i = 1; i < m_height - 1; i++) {
 	for(unsigned j = 1; j < m_width - 1; j++) {
-	  vp        = glm::vec2(i, j) - glm::vec2(_y, _x);
+	  vp        = glm::vec2(j/float(m_width), 1.0f - (i/float(m_height))) - glm::vec2(_x, _y);
 	  dist      = glm::length(vp);
 	  vp        = glm::normalize(vp);
 	  cos_theta = glm::dot(vp, v);
