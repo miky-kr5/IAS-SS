@@ -4,6 +4,12 @@
 
 #include "pheromone.hpp"
 
+#define MAP_POS(X, Y) (data[((X) * m_height) + (Y)])
+
+static const float         EVAPORATION_RATE    = 0.1f;
+const        unsigned char MAX_PHERO_INTENSITY = 250;
+const        unsigned char MIN_PHERO_INTENSITY = 1;
+
 PheromoneMap::PheromoneMap(const char * file_name) {
   load_map(file_name);
   sem_init(&map_semaphore, 0, 1);
@@ -12,7 +18,7 @@ PheromoneMap::PheromoneMap(const char * file_name) {
 }
 
 PheromoneMap::~PheromoneMap() {
-  free(data);
+  delete data;
   sem_destroy(&map_semaphore);
 
   if(tex_created) {
@@ -27,7 +33,7 @@ void PheromoneMap::load_map(const char * file_name) {
 
   png_init(0, 0);
   png_open_file_read(&tex, file_name);
-  data = static_cast<unsigned char *>(malloc(tex.width * tex.height * tex.bpp));
+  data = new unsigned char[tex.width * tex.height * tex.bpp];
   png_get_data(&tex, data);
 
   std::cout << "Loaded map \"" << file_name << "\" :: " << tex.width << "x" << tex.height << "x" << (int)tex.bpp << std::endl;
@@ -50,8 +56,8 @@ GLuint PheromoneMap::s_build_texture() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, handle);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_width, m_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     tex_created = true;
   } sem_post(&map_semaphore);
@@ -59,53 +65,36 @@ GLuint PheromoneMap::s_build_texture() {
   return handle;
 }
 
-void PheromoneMap::s_draw_point(float x, float y) {
-  int _x = m_width * x;
-  int _y = m_height - (m_height * y);
+bool PheromoneMap::s_deposit_pheromone(float x, float y) {
+  bool valid = false;
+  int  _x = m_width * x;
+  int  _y = m_height - (m_height * y);
 
   sem_wait(&map_semaphore); {
-    data[(_y * m_height) + _x] = 249;
+    if(MAP_POS(_y, _x) <= MAX_PHERO_INTENSITY) {
+      MAP_POS(_y, _x) = MAX_PHERO_INTENSITY;
+      valid = true;
+    }
   } sem_post(&map_semaphore);
+
+  return valid;
 }
 
-void PheromoneMap::s_update() {
+void PheromoneMap::s_evaporate() {
+  unsigned char p_eva;
+
   clock_t now = clock();
-  
-  if(static_cast<float>(now - then) / CLOCKS_PER_SEC < 0.005) {
+  if(static_cast<float>(now - then) / CLOCKS_PER_SEC < 0.05) {
     return;
   }
-
   then = now;
   
   sem_wait(&map_semaphore); {
-    for(int i = 1; i < m_height - 1; i++) {
-      for(int j = 1; j < m_width - 1; j++) {
-	if(data[(i * m_height) + j] > 10 && data[(i * m_height) + j] < 250){
-	  data[(i * m_height) + j] -= 1;
-	
-	  if(data[((i - 1) * m_height) + (j - 1)] < 250)
-	    data[((i - 1) * m_height) + (j - 1)] = data[(i * m_height) + j];
-	
-	  if(data[((i - 1) * m_height) + j] < 250)
-	    data[((i - 1) * m_height) + j] = data[(i * m_height) + j];
-	
-	  if(data[((i - 1) * m_height) + (j + 1)] < 250)
-	    data[((i - 1) * m_height) + (j + 1)] = data[(i * m_height) + j];
-	
-	  if(data[(i * m_height) + (j - 1)] < 250)
-	    data[(i * m_height) + (j - 1)] = data[(i * m_height) + j];
-	
-	  if(data[(i * m_height) + (j + 1)] < 250)
-	    data[(i * m_height) + (j + 1)] = data[(i * m_height) + j];
-	
-	  if(data[((i + 1) * m_height) + (j - 1)] < 250)
-	    data[((i + 1) * m_height) + (j - 1)] = data[(i * m_height) + j];
-	
-	  if(data[((i + 1) * m_height) + j] < 250)
-	    data[((i + 1) * m_height) + j] = data[(i * m_height) + j];
-	
-	  if(data[((i + 1) * m_height) + (j + 1)] < 250)
-	    data[((i + 1) * m_height) + (j + 1)] = data[(i * m_height) + j];
+    for(unsigned i = 1; i < m_height - 1; i++) {
+      for(unsigned j = 1; j < m_width - 1; j++) {
+	if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY){
+	  p_eva = MAP_POS(i, j) * EVAPORATION_RATE;
+	  MAP_POS(i, j) -= p_eva;
 	}
       }
     }

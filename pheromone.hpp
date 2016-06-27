@@ -5,14 +5,17 @@
 #include <semaphore.h>
 #include <GL/gl.h>
 
+extern const unsigned char MAX_PHERO_INTENSITY;
+extern const unsigned char MIN_PHERO_INTENSITY;
+
 class PheromoneMap {
 public:
   PheromoneMap(const char * file_name);
   ~PheromoneMap();
 
   GLuint s_build_texture();
-  void s_draw_point(float x, float y);
-  void s_update();
+  bool s_deposit_pheromone(float x, float y);
+  void s_evaporate();
   
 private:
   unsigned char * data;

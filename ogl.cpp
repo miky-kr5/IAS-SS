@@ -32,8 +32,6 @@
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
 
-#define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
 namespace ogl
 { 
   // Variables

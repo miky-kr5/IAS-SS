@@ -28,7 +28,7 @@ OBJECTS = ias_ss.o robot.o ias_robot.o gui.o ogl.o GLSLProgram.o pnglite.o phero
 DEPENDS = $(OBJECTS:.o=.d)
 CFLAGS = -ansi -pedantic -Wall -I./include
 CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++` -I./include
-LDLIBS = `pkg-config --libs playerc++` -lboost_system -lpthread -lz -lGLEW -lGLU -lGL -lfltk -lfltk_gl
+LDLIBS = `pkg-config --libs playerc++` -lboost_system -l m -lpthread -lz -lGLEW -lGLU -lGL -lfltk -lfltk_gl
 
 all: CXXFLAGS += -O2 -D_NDEBUG
 all: $(TARGET)

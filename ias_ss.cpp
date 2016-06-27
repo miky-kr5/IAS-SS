@@ -32,8 +32,8 @@
 #include "ias_robot.hpp"
 
 const char * TITLE = "Pheromone map";
-const int W = 256;
-const int H = 256;
+const int W = 512;
+const int H = 512;
 const uint32_t PORT = PlayerCc::PLAYER_PORTNUM + 1;
 const uint32_t NUM_ROBOTS = 4;
 

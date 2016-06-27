@@ -50,6 +50,7 @@ private:
   PheromoneMap * _phero_map;
   
   void avoid_wall(float front_speed, float turn_speed);
+  void deposit_pheromone();
 };
 
 #endif

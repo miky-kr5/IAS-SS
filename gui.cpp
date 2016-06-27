@@ -53,7 +53,7 @@ void GlGui::draw() {
     ogl::reshape(w(), h());
   }
 
-  phero_map->s_update();
+  phero_map->s_evaporate();
   ogl::display();
 }
 
