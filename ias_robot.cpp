@@ -38,6 +38,7 @@ static const double CRIT_DIST_M      = 1.0;
 static const float  MAP_SIZE         = 16.0f;
 static const int    PHERO_AMOUNT     = 10;
 static const float  PHERO_RADIUS     = 1.0;
+static const float  SENSOR_RADIUS    = 2.0;
 
 static inline float random_num() {
   return (((static_cast<float>(rand() % 256) / 256.0) - 0.5f) * 2.0f ) * PHERO_RADIUS;
@@ -54,14 +55,17 @@ IASSS_Robot::~IASSS_Robot() {
 }
 
 void IASSS_Robot::run() {
+  float x, y;
   int    rv;
   long   then, now, delta, wait;
   struct timeval tv;
   double dist   = std::numeric_limits<double>::infinity();
 
   _p_client->Read();
+
   rv = gettimeofday(&tv, NULL);
   then = tv.tv_usec;
+
   /******************************************************************************
    * WALL AVOIDANCE START                                                       *
    ******************************************************************************/
@@ -78,11 +82,16 @@ void IASSS_Robot::run() {
   /******************************************************************************
    * WALL AVOIDANCE END                                                         *
    ******************************************************************************/
+
+  x = (_p_proxy->GetXPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+  y = (_p_proxy->GetYPos() + (MAP_SIZE / 2)) / MAP_SIZE;
+  _phero_map->s_sample(&_phero_sensor, x, y, _p_proxy->GetYaw(), SENSOR_RADIUS / MAP_SIZE);
+  
+  deposit_pheromone();
+
   rv = gettimeofday(&tv, NULL);
   now = tv.tv_usec;
   delta = now - then;
-
-  deposit_pheromone();
   
   // Sleep for a bit before finishing this control iteration.
   wait = rv == 0 ? HALF_SECOND_USEC - delta : HALF_SECOND_USEC;
@@ -108,8 +117,8 @@ void IASSS_Robot::avoid_wall(float front_speed, float turn_speed) {
 }
 
 void IASSS_Robot::deposit_pheromone() {
-  float x = _p_proxy->GetXPos();// 
-  float y = _p_proxy->GetYPos();// + (MAP_SIZE / 2)) / MAP_SIZE;
+  float x = _p_proxy->GetXPos();
+  float y = _p_proxy->GetYPos();
   float px, py;
 
   if(_phero_map != NULL) {

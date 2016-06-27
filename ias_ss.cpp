@@ -37,9 +37,9 @@ const int H = 512;
 const uint32_t PORT = PlayerCc::PLAYER_PORTNUM + 1;
 const uint32_t NUM_ROBOTS = 4;
 
-static bool           done = false;
-static Fl_Window *    window = NULL;
-static GlGui *        glWindow = NULL;
+static bool           done      = false;
+static Fl_Window *    window    = NULL;
+static GlGui *        glWindow  = NULL;
 static PheromoneMap * phero_map = NULL;
 
 extern "C" void handler(int signal) {

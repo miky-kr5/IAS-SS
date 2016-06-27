@@ -48,6 +48,7 @@ public:
 
 private:
   PheromoneMap * _phero_map;
+  phero_sensor_t _phero_sensor;
   
   void avoid_wall(float front_speed, float turn_speed);
   void deposit_pheromone();

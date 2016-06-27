@@ -38,7 +38,6 @@ namespace ogl
   static CGLSLProgram m_program;
   static PheromoneMap * m_phero_map = NULL;
   static GLuint m_textureHandle;
-  static GLuint m_gradientHandle;
 
   // Quad definition
   static glm::vec4 vec_points[6];

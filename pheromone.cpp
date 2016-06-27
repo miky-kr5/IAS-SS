@@ -1,6 +1,33 @@
+/*************************************************************************************
+ * Copyright (c) 2016, Miguel Angel Astor Romero                                     *
+ * All rights reserved.                                                              *
+ *                                                                                   *
+ * Redistribution and use in source and binary forms, with or without                *
+ * modification, are permitted provided that the following conditions are met:       *
+ *                                                                                   *
+ * 1. Redistributions of source code must retain the above copyright notice, this    *
+ *    list of conditions and the following disclaimer.                               *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,      *
+ *    this list of conditions and the following disclaimer in the documentation      *
+ *    and/or other materials provided with the distribution.                         *
+ *                                                                                   *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND   *
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     *
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE            *
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR   *
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES    *
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;      *
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND       *
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT        *
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS     *
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                      *
+ *************************************************************************************/
+
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 #include <pnglite.h>
+#include <glm/glm.hpp>
 
 #include "pheromone.hpp"
 
@@ -67,8 +94,8 @@ GLuint PheromoneMap::s_build_texture() {
 
 bool PheromoneMap::s_deposit_pheromone(float x, float y) {
   bool valid = false;
-  int  _x = m_width * x;
-  int  _y = m_height - (m_height * y);
+  int  _x    = m_width * x;
+  int  _y    = m_height - (m_height * y);
 
   sem_wait(&map_semaphore); {
     if(MAP_POS(_y, _x) <= MAX_PHERO_INTENSITY) {
@@ -92,11 +119,46 @@ void PheromoneMap::s_evaporate() {
   sem_wait(&map_semaphore); {
     for(unsigned i = 1; i < m_height - 1; i++) {
       for(unsigned j = 1; j < m_width - 1; j++) {
-	if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY){
+	if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY) {
 	  p_eva = MAP_POS(i, j) * EVAPORATION_RATE;
 	  MAP_POS(i, j) -= p_eva;
 	}
       }
     }
   } sem_post(&map_semaphore);
+}
+
+void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius) {
+  int       _x = m_width * x;
+  int       _y = m_height - (m_height * y);
+  float     _r = m_width * radius;
+  float     dist;
+  float     cos_theta;
+  glm::vec2 v;
+  glm::vec2 vp;
+
+  if(sensor == NULL)
+    return;
+  else {
+    v  = glm::vec2(_r * cos(yaw), - _r * sin(yaw)) - glm::vec2(0.0, 0.0);
+    v  = glm::normalize(v);
+
+    sem_wait(&map_semaphore); {
+      for(unsigned i = 1; i < m_height - 1; i++) {
+	for(unsigned j = 1; j < m_width - 1; j++) {
+	  vp        = glm::vec2(i, j) - glm::vec2(_y, _x);
+	  dist      = glm::length(vp);
+	  vp        = glm::normalize(vp);
+	  cos_theta = glm::dot(vp, v);
+
+	  if(cos_theta > 0.0f && dist <= _r) {
+	    if(MAP_POS(i, j) >= MIN_PHERO_INTENSITY && MAP_POS(i, j) <= MAX_PHERO_INTENSITY) {
+	      MAP_POS(i, j) = MAX_PHERO_INTENSITY;
+	    }
+	  } else
+	    continue;
+	}
+      }
+    } sem_post(&map_semaphore);
+  }
 }
