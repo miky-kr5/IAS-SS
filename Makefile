@@ -30,7 +30,7 @@ CFLAGS = -ansi -pedantic -Wall -I./include
 CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++` -I./include -DGLM_FORCE_RADIANS -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
 LDLIBS = `pkg-config --libs playerc++` -lboost_system -lm -lpthread -lz -lGLEW -lGLU -lGL -lfltk -lfltk_gl
 
-all: CXXFLAGS += -O2 -D_NDEBUG
+all: CXXFLAGS += -O2 -DNDEBUG
 all: $(TARGET)
 
 debug: CXXFLAGS += -g

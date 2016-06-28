@@ -23,6 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                      *
  *************************************************************************************/
 
+#include <map>
 #include <limits>
 #include <cstdlib>
 #include <cmath>
@@ -30,15 +31,20 @@
 
 #include "ias_robot.hpp"
 
-static const float  TURN_DEG_PER_SEC = 40.0f;
+#define PROB_MODEL_1
+
+static const float  TURN_DEG_PER_SEC = 90.0f;
 static const float  METERS_PER_SEC   = 0.4f;
 static const long   HALF_SECOND_USEC = 500000;
-static const double MIN_DIST_M       = 1.5;
-static const double CRIT_DIST_M      = 1.0;
+static const double MIN_DIST_M       = 1.0;
+static const double CRIT_DIST_M      = 0.7;
 static const float  MAP_SIZE         = 16.0f;
-static const int    PHERO_AMOUNT     = 25;
-static const float  PHERO_RADIUS     = 1.0;
-static const float  SENSOR_RADIUS    = 2.0;
+static const int    PHERO_AMOUNT     = 30;
+static const float  PHERO_RADIUS     = 1.4f;
+static const float  SENSOR_RADIUS    = 2.0f;
+static const float  U_RATIO          = 0.3f;
+static const float  V_RATIO          = 0.1f;
+static const float  SMOOTHING_COEFF  = 0.3f;
 
 static inline float random_num() {
   return (((static_cast<float>(rand() % 256) / 256.0) - 0.5f) * 2.0f ) * PHERO_RADIUS;
@@ -55,11 +61,11 @@ IASSS_Robot::~IASSS_Robot() {
 }
 
 void IASSS_Robot::run() {
-  float x, y;
+  float x, y, steer = 0.0f;
   int    rv;
   long   then, now, delta, wait;
   struct timeval tv;
-  double dist = std::numeric_limits<double>::infinity();
+  double dist  = std::numeric_limits<double>::infinity();
 
   _p_client->Read();
 
@@ -69,7 +75,11 @@ void IASSS_Robot::run() {
   x = (_p_proxy->GetXPos() + (MAP_SIZE / 2)) / MAP_SIZE;
   y = (_p_proxy->GetYPos() + (MAP_SIZE / 2)) / MAP_SIZE;
   _phero_map->s_sample(&_phero_sensor, x, y, _p_proxy->GetYaw(), SENSOR_RADIUS / MAP_SIZE);
+  
+  steer += SMOOTHING_COEFF * brss();
 
+  deposit_pheromone(x, y);
+  
   /******************************************************************************
    * WALL AVOIDANCE START                                                       *
    ******************************************************************************/
@@ -82,12 +92,10 @@ void IASSS_Robot::run() {
   } else if(dist <= CRIT_DIST_M) {
     avoid_wall(0.0f, TURN_DEG_PER_SEC);
   } else
-    _p_proxy->SetSpeed(METERS_PER_SEC, 0.0f);
+    _p_proxy->SetSpeed(METERS_PER_SEC, steer);
   /******************************************************************************
    * WALL AVOIDANCE END                                                         *
    ******************************************************************************/
-  
-  deposit_pheromone();
 
   rv = gettimeofday(&tv, NULL);
   now = tv.tv_usec;
@@ -116,26 +124,100 @@ void IASSS_Robot::avoid_wall(float front_speed, float turn_speed) {
     _p_proxy->SetSpeed(front_speed, PlayerCc::dtor(turn_speed));
 }
 
-void IASSS_Robot::deposit_pheromone() {
-  float x = _p_proxy->GetXPos();
-  float y = _p_proxy->GetYPos();
-  float px, py;
+void IASSS_Robot::deposit_pheromone(float x, float y) {
+  for(int i = 0; i < PHERO_AMOUNT; i++)
+    _phero_map->s_deposit_pheromone(x, y, _p_proxy->GetYaw(), PHERO_RADIUS / MAP_SIZE);
+}
 
-  if(_phero_map != NULL) {
-    for(int i = 0; i < PHERO_AMOUNT; i++) {
-      px = random_num() + x;
-      py = random_num() + y;
-      if(fabs(px) < (MAP_SIZE / 2) && fabs(py) < (MAP_SIZE / 2)) {
-	px = (px + (MAP_SIZE / 2)) / MAP_SIZE;
-	py = (py + (MAP_SIZE / 2)) / MAP_SIZE;
-	if(!_phero_map->s_deposit_pheromone(px, py)) {
-	  i--;
-	  break;
+float IASSS_Robot::brss() {
+  std::map<int, float> U, V;
+  unsigned int         i_min, i_max;
+  float                min, sample, prob, max, sum_uv = 0.0f, steer;
+
+  while(U.size() < (U_RATIO * NUM_PHERO_SAMPLES)) {
+    min = std::numeric_limits<double>::max();
+    i_min = 0;
+    for(unsigned int i = NUM_PHERO_SAMPLES / 2; i < NUM_PHERO_SAMPLES; i++) {
+      sample = _phero_sensor[i];
+      if(U.find(i) == U.end()) {
+	if(sample < min) {
+	  min = sample;
+	  i_min = i;
 	}
-      } else {
-	i--;
-	break;
+      }
+    }
+    for(unsigned int i = NUM_PHERO_SAMPLES / 2; i > 0; i--) {
+      sample = _phero_sensor[i];
+      if(U.find(i) == U.end()) {
+	if(sample < min) {
+	  min = sample;
+	  i_min = i;
+	}
+      }
+    }
+    U[i_min] = min;
+  }
+
+  while(V.size() < (V_RATIO * NUM_PHERO_SAMPLES)) {
+    for(unsigned int i = NUM_PHERO_SAMPLES / 2; i < NUM_PHERO_SAMPLES; i++) {
+      if(U.find(i) == U.end() && V.find(i) == V.end()) {
+	prob = rand() % 100;
+	if(prob < 15)
+	  V[i] = _phero_sensor[i];
+      }
+    }
+    for(unsigned int i = NUM_PHERO_SAMPLES / 2; i > 0; i--) {
+      if(U.find(i) == U.end() && V.find(i) == V.end()) {
+	prob = rand() % 100;
+	if(prob < 15)
+	  V[i] = _phero_sensor[i];
       }
     }
   }
+
+  for(std::map<int, float>::iterator it = U.begin(); it != U.end(); ++it) {
+#ifdef PROB_MODEL_1
+    sum_uv += it->second;
+#else
+    sum_uv += 1.0f - it->second;
+#endif
+  }
+
+  for(std::map<int, float>::iterator it = V.begin(); it != V.end(); ++it) {
+#ifdef PROB_MODEL_1
+    sum_uv += it->second;
+#else
+    sum_uv += 1.0f - it->second;
+#endif
+  }
+
+  U.clear();
+  V.clear();
+
+  for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+#ifdef PROB_MODEL_1
+    _phero_sensor.probs[i] = 1.0f / (_phero_sensor[i] / sum_uv);
+#else
+    _phero_sensor.probs[i] = (1.0f - _phero_sensor[i]) / ( / sum_uv);
+#endif
+  }
+
+  max = std::numeric_limits<double>::min();
+  i_max = 0;
+  for(unsigned int i = NUM_PHERO_SAMPLES / 2; i < NUM_PHERO_SAMPLES; i++) {
+    if(_phero_sensor.probs[i] > max) {
+      max = _phero_sensor.probs[i];
+      i_max = i;
+    }
+  }
+  for(unsigned int i = NUM_PHERO_SAMPLES / 2; i > 0; i--) {
+    if(_phero_sensor.probs[i] > max) {
+      max = _phero_sensor.probs[i];
+      i_max = i;
+    }
+  }
+
+  steer = (NUM_PHERO_SAMPLES / 2.0f) - i_max;
+
+  return steer;
 }

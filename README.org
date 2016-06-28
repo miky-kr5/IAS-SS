@@ -9,8 +9,9 @@ following papers:
 
 This is being developed as part of the Robotics and Bio-Inspired Learning graduate course at UCV.
 
-Future versions of this README file will include a technical report on the developed software.
-
 ** Notes
 
-The file ~maps/cave.png~ is part of the standard Stage distribution.
+ * The file ~maps/cave.png~ is part of the standard Stage distribution.
+ * This software uses the /pnglite/ library by Daniel Karling.
+ * The ~GLSLProgram~ code was written by Esmitt Ramirez J.
+

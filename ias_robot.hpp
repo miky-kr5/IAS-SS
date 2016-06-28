@@ -51,7 +51,8 @@ private:
   phero_sensor_t _phero_sensor;
   
   void avoid_wall(float front_speed, float turn_speed);
-  void deposit_pheromone();
+  void deposit_pheromone(float x, float y);
+  float brss();
 };
 
 #endif

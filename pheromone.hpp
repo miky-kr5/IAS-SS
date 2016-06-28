@@ -52,17 +52,6 @@ typedef struct PHERO_SENSOR {
       probs[i]   = 0.0f;
     }
   }
-
-  void set_probabilities() {
-    float phero_sum = 0.0f;
-
-    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++)
-      phero_sum += samples[i];
-    
-    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
-      probs[i] = 1.0f / (samples[i] / phero_sum);
-    }
-  }
   
   float operator[](unsigned int index) {
     if(index >= NUM_PHERO_SAMPLES)
@@ -78,12 +67,13 @@ public:
   ~PheromoneMap();
 
   GLuint s_build_texture();
-  bool s_deposit_pheromone(float x, float y);
+  void s_deposit_pheromone(float x, float y, float yaw, float radius);
   void s_evaporate();
   void s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius);
   
 private:
-  unsigned char * data;
+  int *           data;
+  unsigned char * tex_data;
   unsigned        m_width;
   unsigned        m_height;
   unsigned char   m_bpp;
