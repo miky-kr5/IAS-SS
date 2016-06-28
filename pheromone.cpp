@@ -214,14 +214,14 @@ void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw
 	      index = static_cast<unsigned int>((NUM_PHERO_SAMPLES / 2.0f) - ang);
 	      index = index >= NUM_PHERO_SAMPLES ? NUM_PHERO_SAMPLES - 1 : index;
 	      if(MAP_POS(i, j) > sensor->samples[index]) {
-		sensor->samples[index] += MAP_POS(i, j);
+		sensor->samples[index] = MAP_POS(i, j);
 		sensor->sample_amnt[index] += 1;
 	      }
 	    } else {
 	      index = static_cast<unsigned int>((NUM_PHERO_SAMPLES / 2.0f) + ang);
 	      index = index >= NUM_PHERO_SAMPLES ? NUM_PHERO_SAMPLES - 1 : index;
 	      if(MAP_POS(i, j) > sensor->samples[index]) {
-		sensor->samples[index] += MAP_POS(i, j);
+		sensor->samples[index] = MAP_POS(i, j);
 		sensor->sample_amnt[index] += 1;
 	      }
 	    }
@@ -231,8 +231,8 @@ void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw
       }
     } sem_post(&map_semaphore);
 
-    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+    /*for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
       sensor->samples[i] = (sensor->sample_amnt[i] > 0) ? (sensor->samples[i] / sensor->sample_amnt[i]) : 0.0f;
-    }
+      }*/
   }
 }
