@@ -28,10 +28,11 @@
 #include <cstdlib>
 #include <cmath>
 #include <sys/time.h>
+#include <sstream>
 
 #include "ias_robot.hpp"
 
-#define PROB_MODEL_1
+//#define PROB_MODEL_1
 
 static const float  TURN_DEG_PER_SEC = 90.0f;
 static const float  METERS_PER_SEC   = 0.4f;
@@ -84,7 +85,7 @@ void IASSS_Robot::run() {
    * WALL AVOIDANCE START                                                       *
    ******************************************************************************/
   // Check if there is something in front of the robot.
-  for(int i = 96; i < 126; i++)
+  for(int i = 89; i < 134; i++)
     dist = _r_proxy->GetRange(i) < dist ? _r_proxy->GetRange(i) : dist;
 
   if(dist < MIN_DIST_M && dist > CRIT_DIST_M) {
@@ -133,6 +134,7 @@ float IASSS_Robot::brss() {
   std::map<int, float> U, V;
   unsigned int         i_min, i_max;
   float                min, sample, prob, max, sum_uv = 0.0f, steer;
+  std::ostringstream   oss;
 
   while(U.size() < (U_RATIO * NUM_PHERO_SAMPLES)) {
     min = std::numeric_limits<double>::max();
@@ -198,7 +200,7 @@ float IASSS_Robot::brss() {
 #ifdef PROB_MODEL_1
     _phero_sensor.probs[i] = 1.0f / (_phero_sensor[i] / sum_uv);
 #else
-    _phero_sensor.probs[i] = (1.0f - _phero_sensor[i]) / ( / sum_uv);
+    _phero_sensor.probs[i] = (1.0f - _phero_sensor[i]) / (sum_uv);
 #endif
   }
 
@@ -218,6 +220,13 @@ float IASSS_Robot::brss() {
   }
 
   steer = (NUM_PHERO_SAMPLES / 2.0f) - i_max;
+
+  oss << "samples: " << std::endl;
+  for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++)
+    oss << "\tSAMPLE[" << i << "]: " << _phero_sensor[i] << " - " << _phero_sensor.sample_amnt[i] << " - " << _phero_sensor.probs[i] << std::endl;
+  oss << "\ti_max: " << i_max << " | Steer: " << steer;
+  
+  log(oss.str());
 
   return steer;
 }

@@ -187,52 +187,51 @@ void PheromoneMap::s_sample(phero_sensor_t * sensor, float x, float y, float yaw
   float        cos_theta;
   float        ang;
   glm::vec2    v, vp;
-  glm::vec3    line, v3d;
 
   if(sensor == NULL)
     return;
+  
   else {
+    
     sensor->reset();
 
+    // Calculate the robot's view vector.
     v  = glm::vec2(radius * cos(yaw), radius * sin(yaw)) - glm::vec2(0.0, 0.0);
     v  = glm::normalize(v);
     
     sem_wait(&map_semaphore); {
+      // For every point in the pheromone map.
       for(unsigned i = 0; i < m_height; i++) {
 	for(unsigned j = 0; j < m_width; j++) {
-	  vp        = glm::vec2(j/float(m_width), 1.0f - (i/float(m_height))) - glm::vec2(x, y);
+	  // Calculate the vector from the robot's center to the sampling point.
+	  vp        = glm::vec2(j / float(m_width), 1.0f - (i / float(m_height))) - glm::vec2(x, y);
+	  // Distance from the sampling point to  the robot's center.
 	  dist      = glm::length(vp);
 	  vp        = glm::normalize(vp);
+	  // Cosine of the angle between the robot's center and the sampling point.
 	  cos_theta = glm::dot(vp, v);
 
+	  // Check if the point is close enough to the front of the robot.
 	  if(cos_theta > 0.0f && dist <= radius) {
 	    cos_theta = cos_theta > 1.0f ? 1.0f : cos_theta;
+	    // Get the angle between the robot's center and the sampling point.
 	    ang  = PlayerCc::rtod(acos(cos_theta));
-	    line = glm::vec3(v.x, v.y, 0.0f);
-	    v3d  = glm::vec3(vp.x, vp.y, 0.0f);
-	    if(side(line, v3d) > 0) {
-	      index = static_cast<unsigned int>((NUM_PHERO_SAMPLES / 2.0f) - ang);
-	      index = index >= NUM_PHERO_SAMPLES ? NUM_PHERO_SAMPLES - 1 : index;
-	      if(MAP_POS(i, j) > sensor->samples[index]) {
-		sensor->samples[index] = MAP_POS(i, j);
-		sensor->sample_amnt[index] += 1;
-	      }
-	    } else {
-	      index = static_cast<unsigned int>((NUM_PHERO_SAMPLES / 2.0f) + ang);
-	      index = index >= NUM_PHERO_SAMPLES ? NUM_PHERO_SAMPLES - 1 : index;
-	      if(MAP_POS(i, j) > sensor->samples[index]) {
-		sensor->samples[index] = MAP_POS(i, j);
-		sensor->sample_amnt[index] += 1;
-	      }
-	    }
+
+	    // Put the sample in the sampling pool.
+	    index = static_cast<unsigned int>(ang / (180 / 5));
+	    index = index >= NUM_PHERO_SAMPLES ? NUM_PHERO_SAMPLES - 1 : index;
+	    sensor->samples[index] = MAP_POS(i, j);
+	    sensor->sample_amnt[index] += 1;
+
 	  } else
 	    continue;
 	}
       }
     } sem_post(&map_semaphore);
 
-    /*for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+    // Average the samples.
+    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
       sensor->samples[i] = (sensor->sample_amnt[i] > 0) ? (sensor->samples[i] / sensor->sample_amnt[i]) : 0.0f;
-      }*/
+    }
   }
 }
