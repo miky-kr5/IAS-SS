@@ -1,0 +1,7 @@
+-ansi
+-pedantic
+-Wall
+-I/usr/local/include/player-3.0
+-I./include
+-DGLM_FORCE_RADIANS
+-DBOOST_SIGNALS_NO_DEPRECATION_WARNING
