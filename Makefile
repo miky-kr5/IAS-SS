@@ -27,8 +27,8 @@ TARGET = ias-ss
 OBJECTS = ias_ss.o robot.o ias_robot.o gui.o ogl.o GLSLProgram.o pnglite.o pheromone.o
 DEPENDS = $(OBJECTS:.o=.d)
 CFLAGS = -ansi -pedantic -Wall -I./include
-CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++` -I./include -DGLM_FORCE_RADIANS -DBOOST_SIGNALS_NO_DEPRECATION_WARNING
-LDLIBS = `pkg-config --libs playerc++` -lboost_system -lm -lpthread -lz -lGLEW -lGLU -lGL -lfltk -lfltk_gl
+CXXFLAGS = -ansi -pedantic -Wall `pkg-config --cflags playerc++` -I./include -DGLM_FORCE_RADIANS -DBOOST_SIGNALS_NO_DEPRECATION_WARNING `fltk-config --cxxflags --use-gl`
+LDLIBS = `pkg-config --libs playerc++` -lboost_system -lm -lpthread -lz -lGLEW -lGLU -lGL `fltk-config --ldflags --use-gl`
 
 all: CXXFLAGS += -O2 -DNDEBUG
 all: $(TARGET)
