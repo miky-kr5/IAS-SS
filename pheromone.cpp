@@ -55,8 +55,9 @@ static inline float random_n(float r) {
 PheromoneMap::PheromoneMap(const char * file_name) {
   load_map(file_name);
   sem_init(&map_semaphore, 0, 1);
-  tex_created = false;
   then = 0;
+
+  glGenTextures(1, &handle);
 }
 
 PheromoneMap::~PheromoneMap() {
@@ -64,11 +65,9 @@ PheromoneMap::~PheromoneMap() {
   delete tex_data;
   sem_destroy(&map_semaphore);
 
-  if(tex_created) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
-    glDeleteTextures(1, &handle);
-  }
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, handle);
+  glDeleteTextures(1, &handle);
 }
 
 void PheromoneMap::load_map(const char * file_name) {
@@ -97,25 +96,16 @@ void PheromoneMap::load_map(const char * file_name) {
 
 GLuint PheromoneMap::s_build_texture() {
   sem_wait(&map_semaphore); {
-    if(tex_created) {
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, handle);
-      glDeleteTextures(1, &handle);
-    }
-
     for(unsigned int i = 0; i < (m_width * m_height * m_bpp); i++) {
       tex_data[i] = static_cast<unsigned char>(data[i]);
     }
-
-    glGenTextures(1, &handle);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_width, m_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, tex_data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    tex_created = true;
   } sem_post(&map_semaphore);
+  
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, handle);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_width, m_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, tex_data);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   return handle;
 }

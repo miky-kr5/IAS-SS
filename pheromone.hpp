@@ -78,7 +78,6 @@ private:
   unsigned        m_height;
   unsigned char   m_bpp;
   sem_t           map_semaphore;
-  bool            tex_created;
   GLuint          handle;
   clock_t         then;
 
