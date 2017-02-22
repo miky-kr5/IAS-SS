@@ -62,7 +62,6 @@ PheromoneMap::PheromoneMap(const char * file_name) {
 
 PheromoneMap::~PheromoneMap() {
   delete data;
-  delete tex_data;
   sem_destroy(&map_semaphore);
 
   glActiveTexture(GL_TEXTURE0);
@@ -71,13 +70,12 @@ PheromoneMap::~PheromoneMap() {
 }
 
 void PheromoneMap::load_map(const char * file_name) {
-  unsigned char * _data;
   png_t tex;
 
   png_init(0, 0);
   png_open_file_read(&tex, file_name);
-  _data = new unsigned char[tex.width * tex.height * tex.bpp];
-  png_get_data(&tex, _data);
+  data = new unsigned char[tex.width * tex.height * tex.bpp];
+  png_get_data(&tex, data);
 
   std::cout << "Loaded map \"" << file_name << "\" :: " << tex.width << "x" << tex.height << "x" << (int)tex.bpp << std::endl;
   m_width  = tex.width;
@@ -85,28 +83,20 @@ void PheromoneMap::load_map(const char * file_name) {
   m_bpp    = tex.bpp;
   
   png_close_file(&tex);
-
-  data = new int[tex.width * tex.height * tex.bpp];
-  tex_data = new unsigned char[tex.width * tex.height * tex.bpp];
-  for(unsigned int i = 0; i < (tex.width * tex.height * tex.bpp); i++) {
-    data[i] = _data[i];
-  }
-  delete _data;
 }
 
 GLuint PheromoneMap::s_build_texture() {
-  sem_wait(&map_semaphore); {
-    for(unsigned int i = 0; i < (m_width * m_height * m_bpp); i++) {
-      tex_data[i] = static_cast<unsigned char>(data[i]);
-    }
-  } sem_post(&map_semaphore);
-  
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, handle);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_width, m_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, tex_data);
+  sem_wait(&map_semaphore); {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_width, m_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+  } sem_post(&map_semaphore);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, 0);
+  
   return handle;
 }
 

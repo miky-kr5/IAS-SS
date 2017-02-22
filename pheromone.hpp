@@ -72,8 +72,7 @@ public:
   void s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius);
   
 private:
-  int *           data;
-  unsigned char * tex_data;
+  unsigned char * data;
   unsigned        m_width;
   unsigned        m_height;
   unsigned char   m_bpp;

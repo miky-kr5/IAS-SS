@@ -28,6 +28,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <pnglite.h>
 
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
@@ -38,6 +39,7 @@ namespace ogl
   static CGLSLProgram m_program;
   static PheromoneMap * m_phero_map = NULL;
   static GLuint m_textureHandle;
+  static GLuint m_colorMapHandle;
 
   // Quad definition
   static glm::vec4 vec_points[6];
@@ -52,19 +54,43 @@ namespace ogl
     vec_tex_coords[5] = glm::vec2( 1.0f,  0.0f); vec_points[5] = glm::vec4(  0.5f,  0.5f, 0.0f, 1.0f );
   }
 
+  void build_color_map() {
+    png_t tex;
+
+    png_init(0, 0);
+    png_open_file_read(&tex, "shaders/color_map.png");
+    unsigned char * data = new unsigned char[tex.width * tex.height * tex.bpp];
+    png_get_data(&tex, data);
+
+    glEnable(GL_TEXTURE_1D);
+    glGenTextures(1, &m_colorMapHandle);
+    glEnable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, m_colorMapHandle);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, tex.width, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    png_close_file(&tex);
+    delete data;
+  }
+  
   void initialize(PheromoneMap * phero_map) {
+    glEnable(GL_TEXTURE_1D);
     glEnable(GL_TEXTURE_2D);
 
     glewInit();
 
     quad();
     m_phero_map = phero_map;
+
+    build_color_map();
     
     m_program.loadShader("shaders/basic.vert", CGLSLProgram::VERTEX);
     m_program.loadShader("shaders/basic.frag", CGLSLProgram::FRAGMENT);
     m_program.create_link();
     m_program.enable();
     m_program.addUniform("sTexture");
+    m_program.addUniform("sColorMap");
     m_program.disable();
 
     std::cout << "OpenGL Version: " << (char*)glGetString(GL_VERSION) << std::endl;
@@ -76,13 +102,22 @@ namespace ogl
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     if(m_phero_map != NULL)
-      m_textureHandle = m_phero_map->s_build_texture(); // Good grief!
+      m_textureHandle = m_phero_map->s_build_texture();
     
     m_program.enable();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-    glUniform1i(m_program.getLocation("sTexture"), GL_TEXTURE0);
 
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+    glUniform1i(m_program.getLocation("sTexture"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glEnable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, m_colorMapHandle);
+    glUniform1i(m_program.getLocation("sColorMap"), 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    
     glBegin(GL_TRIANGLES); {
       for(int i = 0; i < 6; i++) {
 	glTexCoord2f(vec_tex_coords[i].s, vec_tex_coords[i].t);

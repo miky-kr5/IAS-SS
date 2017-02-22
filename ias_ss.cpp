@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   signal(SIGINT, handler);
 
   try {
-    phero_map = new PheromoneMap("maps/cave_mask.png");
+    phero_map = new PheromoneMap(argc > 1 ? argv[1] : "maps/cave_mask.png");
 
     // Initialize the robot objects and threads.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
