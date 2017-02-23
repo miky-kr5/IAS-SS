@@ -36,7 +36,7 @@
 #define MAP_POS(X, Y) (data[((X) * m_height) + (Y)])
 
 static const unsigned int  MAX_ITERS           = 1000;
-static const float         EVAPORATION_RATE    = 0.1f;
+static const float         EVAPORATION_RATE    = 0.05f;
 const        unsigned char MAX_PHERO_INTENSITY = 250;
 const        unsigned char MIN_PHERO_INTENSITY = 0;
 
