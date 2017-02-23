@@ -28,7 +28,9 @@
 #include <cstdlib>
 #include <cmath>
 #include <sys/time.h>
+#ifndef NDEBUG
 #include <sstream>
+#endif
 
 #include "ias_robot.hpp"
 
@@ -134,7 +136,9 @@ float IASSS_Robot::brss() {
   std::map<int, float> U, V;
   unsigned int         i_min, i_max;
   float                min, sample, prob, max, sum_uv = 0.0f, steer;
+#ifndef NDEBUG
   std::ostringstream   oss;
+#endif
 
   while(U.size() < (U_RATIO * NUM_PHERO_SAMPLES)) {
     min = std::numeric_limits<double>::max();
@@ -221,12 +225,14 @@ float IASSS_Robot::brss() {
 
   steer = (NUM_PHERO_SAMPLES / 2.0f) - i_max;
 
+#ifndef NDEBUG
   oss << "samples: " << std::endl;
   for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++)
     oss << "\tSAMPLE[" << i << "]: " << _phero_sensor[i] << " - " << _phero_sensor.sample_amnt[i] << " - " << _phero_sensor.probs[i] << std::endl;
   oss << "\ti_max: " << i_max << " | Steer: " << steer;
   
   log(oss.str());
+#endif
 
   return steer;
 }

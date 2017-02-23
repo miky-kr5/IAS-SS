@@ -34,7 +34,7 @@
 extern const unsigned char MAX_PHERO_INTENSITY;
 extern const unsigned char MIN_PHERO_INTENSITY;
 
-const unsigned int NUM_PHERO_SAMPLES = 5;
+const unsigned int NUM_PHERO_SAMPLES = 180;
 
 typedef struct PHERO_SENSOR {
   float        samples[NUM_PHERO_SAMPLES];
