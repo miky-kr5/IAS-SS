@@ -28,35 +28,51 @@
 #include "gui.hpp"
 #include "ogl.hpp"
 
-static void redraw_callback(void * arg) {
-  GlGui * window = static_cast<GlGui *>(arg);
-  window->redraw();
-}
+namespace gui {
 
-GlGui::GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, PheromoneMap * phero_map) : Fl_Gl_Window(x, y, w, h, l) {
-  mode(FL_RGB | FL_DOUBLE);
-
-  this->parent = parent;
-  this->phero_map = phero_map;
-  title += l;
-  initialized = false;
-
-  Fl::add_idle(redraw_callback, this);
-}
-
-void GlGui::draw() {
-  if(!valid()) {
-    if(!initialized) {
-      ogl::initialize(phero_map);
-      initialized = true;
-    }
-    ogl::reshape(w(), h());
+  static void redraw_callback(void * arg) {
+    GlGui * window = static_cast<GlGui *>(arg);
+    window->redraw();
   }
 
-  phero_map->s_evaporate();
-  ogl::display();
-}
+  GlGui::GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, ias_ss::PheromoneMap * phero_map) : Fl_Gl_Window(x, y, w, h, l) {
+    mode(FL_RGB | FL_DOUBLE);
 
-int GlGui::handle(int event) {
-  return Fl_Gl_Window::handle(event);
+    this->parent = parent;
+    this->phero_map = phero_map;
+    title += l;
+    initialized = false;
+
+    Fl::add_idle(redraw_callback, this);
+  }
+
+  void GlGui::draw() {
+    if(!valid()) {
+      if(!initialized) {
+	ogl::initialize(phero_map);
+	initialized = true;
+      }
+      ogl::reshape(w(), h());
+    }
+
+    phero_map->s_evaporate();
+    ogl::display();
+  }
+
+  int GlGui::handle(int event) {
+    return Fl_Gl_Window::handle(event);
+  }
+
+  void GlSensorGui::draw() {
+    if(!valid()) {
+      if(!initialized) {
+	ogl::initialize(phero_map);
+	initialized = true;
+      }
+      ogl::reshape(w(), h());
+    }
+
+    ogl::display_sensor_map();
+  }
+
 }

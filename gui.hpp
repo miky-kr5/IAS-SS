@@ -34,19 +34,27 @@
 
 #include "pheromone.hpp"
 
-class GlGui : public Fl_Gl_Window {
-public:
-  GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, PheromoneMap * phero_map);
+namespace gui {
+  class GlGui : public Fl_Gl_Window {
+  public:
+    GlGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, ias_ss::PheromoneMap * phero_map);
 
-protected:
-  virtual void draw();
-  virtual int handle(int);
+  protected:
+    virtual void draw();
+    virtual int handle(int);
+    Fl_Window * parent;
+    std::string title;
+    bool initialized;
+    ias_ss::PheromoneMap * phero_map;
+  };
 
-private:
-  Fl_Window * parent;
-  std::string title;
-  bool initialized;
-  PheromoneMap * phero_map;
-};
+  class GlSensorGui : public GlGui {
+  public:
+    GlSensorGui(Fl_Window * parent, int x, int y, int w, int h, const char * l, ias_ss::PheromoneMap * phero_map): GlGui(parent, x, y, w, h, l, phero_map) { };
 
+  protected:
+    virtual void draw();
+  };
+}
+  
 #endif

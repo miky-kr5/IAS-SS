@@ -32,22 +32,25 @@
 #include "ias_robot.hpp"
 
 const char * TITLE = "Pheromone map";
+const char * S_TITLE = "Pheromone sensor";
 const int W = 512;
 const int H = 512;
 const uint32_t PORT = PlayerCc::PLAYER_PORTNUM + 1;
 const uint32_t NUM_ROBOTS = 4;
 
-static bool           done      = false;
-static Fl_Window *    window    = NULL;
-static GlGui *        glWindow  = NULL;
-static PheromoneMap * phero_map = NULL;
+static bool                done      = false;
+static Fl_Window *         window    = NULL;
+static Fl_Window *         sWindow    = NULL;
+static gui::GlGui *        glWindow  = NULL;
+static gui::GlSensorGui *  glSWindow = NULL;
+static ias_ss::PheromoneMap *      phero_map = NULL;
 
 extern "C" void handler(int signal) {
   done = true;
 }
   
 extern "C" void * robot_thread(void * arg) {
-  IASSS_Robot * robot = static_cast<IASSS_Robot *>(arg);
+  ias_ss::IASSS_Robot * robot = static_cast<ias_ss::IASSS_Robot *>(arg);
 
   std::cout << "Running robot thread." << std::endl;
 
@@ -61,24 +64,30 @@ extern "C" void * robot_thread(void * arg) {
 
 void create_gui(int argc, char **argv) {
   window = new Fl_Window(20, 40, W, H, TITLE);
-  glWindow = new GlGui(window, 0, 0, W, H, TITLE, phero_map);
+  glWindow = new gui::GlGui(window, 0, 0, W, H, TITLE, phero_map);
   window->end();
   window->show(argc, argv);
   window->make_current();
+
+  sWindow = new Fl_Window(20, 40, W, H, S_TITLE);
+  glSWindow = new gui::GlSensorGui(sWindow, 0, 0, W, H, S_TITLE, phero_map);
+  sWindow->end();
+  sWindow->show(argc, argv);
+  sWindow->make_current();
 }
 
 int main(int argc, char **argv) {
   pthread_t                  robot_threads[NUM_ROBOTS];
-  std::vector<IASSS_Robot *> robots;
+  std::vector<ias_ss::IASSS_Robot *> robots;
 
   signal(SIGINT, handler);
 
   try {
-    phero_map = new PheromoneMap(argc > 1 ? argv[1] : "maps/cave_mask.png");
+    phero_map = new ias_ss::PheromoneMap(argc > 1 ? argv[1] : "maps/cave_mask.png");
 
     // Initialize the robot objects and threads.
     for(uint32_t i = 0; i < NUM_ROBOTS; ++i) {
-      robots.push_back(new IASSS_Robot(PlayerCc::PLAYER_HOSTNAME, PORT + i, phero_map));
+      robots.push_back(new ias_ss::IASSS_Robot(PlayerCc::PLAYER_HOSTNAME, PORT + i, phero_map));
 
       if(pthread_create(&robot_threads[i], NULL, robot_thread, static_cast<void *>(robots[i])) != 0) {
 	perror("Could not create robot thread");

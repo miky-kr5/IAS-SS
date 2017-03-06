@@ -29,8 +29,9 @@
 #include "pheromone.hpp"
 
 namespace ogl {
-  void initialize(PheromoneMap * phero_map);
+  void initialize(ias_ss::PheromoneMap * phero_map);
   void display();
+  void display_sensor_map();
   void reshape(int w, int h);
 }
 

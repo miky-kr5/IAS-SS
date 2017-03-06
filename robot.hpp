@@ -30,24 +30,26 @@
 #include <string>
 #include <libplayerc++/playerc++.h>
 
-/**
- * Base class for robot types.
- */
-class Robot {
-public:
-  Robot(std::string hostname, uint32_t port);
-  virtual ~Robot();
+namespace ias_ss {
+  /**
+   * Base class for robot types.
+   */
+  class Robot {
+  public:
+    Robot(std::string hostname, uint32_t port);
+    virtual ~Robot();
 
-  virtual void run() = 0;
+    virtual void run() = 0;
   
-protected:
-  int                         _port;
-  std::string                 _host_name;
-  PlayerCc::PlayerClient *    _p_client;
-  PlayerCc::Position2dProxy * _p_proxy;
-  PlayerCc::RangerProxy *     _r_proxy;
+  protected:
+    int                         _port;
+    std::string                 _host_name;
+    PlayerCc::PlayerClient *    _p_client;
+    PlayerCc::Position2dProxy * _p_proxy;
+    PlayerCc::RangerProxy *     _r_proxy;
 
-  void log(std::string msg);
-};
+    void log(std::string msg);
+  };
+}
 
 #endif

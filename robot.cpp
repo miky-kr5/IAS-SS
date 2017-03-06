@@ -25,25 +25,27 @@
 
 #include "robot.hpp"
 
-Robot::Robot(std::string hostname, uint32_t port) {
-  _host_name = hostname;
-  _port = port;
+namespace ias_ss {
+  Robot::Robot(std::string hostname, uint32_t port) {
+    _host_name = hostname;
+    _port = port;
 
-  _p_client = new PlayerCc::PlayerClient(hostname, port);
-  _p_proxy  = new PlayerCc::Position2dProxy(_p_client, 0);
-  _r_proxy  = new PlayerCc::RangerProxy(_p_client, 0);
+    _p_client = new PlayerCc::PlayerClient(hostname, port);
+    _p_proxy  = new PlayerCc::Position2dProxy(_p_client, 0);
+    _r_proxy  = new PlayerCc::RangerProxy(_p_client, 0);
 
-  _p_proxy->RequestGeom();
-  _r_proxy->RequestGeom();
-  _r_proxy->RequestConfigure();
-}
+    _p_proxy->RequestGeom();
+    _r_proxy->RequestGeom();
+    _r_proxy->RequestConfigure();
+  }
 
-Robot::~Robot() {
-  delete _p_proxy;
-  delete _r_proxy;
-  delete _p_client;
-}
+  Robot::~Robot() {
+    delete _p_proxy;
+    delete _r_proxy;
+    delete _p_client;
+  }
 
-void Robot::log(std::string msg) {
-  std::cout << "ROBOT(" << _host_name << ":" << _port << ") - " << msg << std::endl;
+  void Robot::log(std::string msg) {
+    std::cout << "ROBOT(" << _host_name << ":" << _port << ") - " << msg << std::endl;
+  }
 }

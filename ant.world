@@ -35,7 +35,7 @@ window
 
 floorplan
 (
-	bitmap "maps/empty.png"
+	bitmap "maps/cave.png"
 	size [ 16.000 16.000 1.500 ]
 )
 

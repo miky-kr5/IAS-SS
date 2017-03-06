@@ -31,56 +31,62 @@
 #include <semaphore.h>
 #include <GL/gl.h>
 
-extern const unsigned char MAX_PHERO_INTENSITY;
-extern const unsigned char MIN_PHERO_INTENSITY;
+namespace ias_ss {
+  extern const unsigned char MAX_PHERO_INTENSITY;
+  extern const unsigned char MIN_PHERO_INTENSITY;
 
-const unsigned int NUM_PHERO_SAMPLES = 180;
+  const unsigned int NUM_PHERO_SAMPLES = 180;
 
-typedef struct PHERO_SENSOR {
-  float        samples[NUM_PHERO_SAMPLES];
-  unsigned int sample_amnt[NUM_PHERO_SAMPLES];
-  float        probs[NUM_PHERO_SAMPLES];
+  typedef struct PHERO_SENSOR {
+    float        samples[NUM_PHERO_SAMPLES];
+    unsigned int sample_amnt[NUM_PHERO_SAMPLES];
+    float        probs[NUM_PHERO_SAMPLES];
 
-  PHERO_SENSOR() {
-    reset();
-  }
-
-  void reset() {
-    memset(sample_amnt, 0, sizeof(unsigned int) * NUM_PHERO_SAMPLES);
-    for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
-      samples[i] = 0.0f;
-      probs[i]   = 0.0f;
+    PHERO_SENSOR() {
+      reset();
     }
-  }
+
+    void reset() {
+      memset(sample_amnt, 0, sizeof(unsigned int) * NUM_PHERO_SAMPLES);
+      for(unsigned int i = 0; i < NUM_PHERO_SAMPLES; i++) {
+	samples[i] = 0.0f;
+	probs[i]   = 0.0f;
+      }
+    }
   
-  float operator[](unsigned int index) {
-    if(index >= NUM_PHERO_SAMPLES)
-      return -1.0f;
-    else
-      return samples[index];
-  }
-} phero_sensor_t;
+    float operator[](unsigned int index) {
+      if(index >= NUM_PHERO_SAMPLES)
+	return -1.0f;
+      else
+	return samples[index];
+    }
+  } phero_sensor_t;
 
-class PheromoneMap {
-public:
-  PheromoneMap(const char * file_name);
-  ~PheromoneMap();
+  class PheromoneMap {
+  public:
+    PheromoneMap(const char * file_name);
+    ~PheromoneMap();
 
-  GLuint s_build_texture();
-  void s_deposit_pheromone(float x, float y, float yaw, float radius);
-  void s_evaporate();
-  void s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius);
+    GLuint s_build_texture();
+    GLuint s_build_sensor_texture();
+    void s_deposit_pheromone(float x, float y, float yaw, float radius);
+    void s_evaporate();
+    void s_sample(phero_sensor_t * sensor, float x, float y, float yaw, float radius);
   
-private:
-  unsigned char * data;
-  unsigned        m_width;
-  unsigned        m_height;
-  unsigned char   m_bpp;
-  sem_t           map_semaphore;
-  GLuint          handle;
-  clock_t         then;
+  private:
+    unsigned char * data;
+    unsigned char * sensor_data;
+    unsigned        m_width;
+    unsigned        m_height;
+    unsigned char   m_bpp;
+    sem_t           map_semaphore;
+    GLuint          handle;
+    GLuint          sensor_handle;
+    int             sensor_updates;
+    clock_t         then;
 
-  void load_map(const char * file_name);
-};
+    void load_map(const char * file_name);
+  };
+}
 
 #endif

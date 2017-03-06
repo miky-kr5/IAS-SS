@@ -37,15 +37,16 @@ namespace ogl
 { 
   // Variables
   static CGLSLProgram m_program;
-  static PheromoneMap * m_phero_map = NULL;
+  static ias_ss::PheromoneMap * m_phero_map = NULL;
   static GLuint m_textureHandle;
+  static GLuint m_sensorTextureHandle;
   static GLuint m_colorMapHandle;
 
   // Quad definition
   static glm::vec4 vec_points[6];
   static glm::vec2 vec_tex_coords[6];
   
-  static void quad() {
+  static inline void quad() {
     vec_tex_coords[0] = glm::vec2( 0.0f,  1.0f); vec_points[0] = glm::vec4( -0.5f, -0.5f, 0.0f, 1.0f );
     vec_tex_coords[1] = glm::vec2( 0.0f,  0.0f); vec_points[1] = glm::vec4( -0.5f,  0.5f, 0.0f, 1.0f );
     vec_tex_coords[2] = glm::vec2( 1.0f,  1.0f); vec_points[2] = glm::vec4(  0.5f, -0.5f, 0.0f, 1.0f );
@@ -76,7 +77,7 @@ namespace ogl
     delete data;
   }
 
-  void initialize(PheromoneMap * phero_map) {
+  void initialize(ias_ss::PheromoneMap * phero_map) {
     glEnable(GL_TEXTURE_1D);
     glEnable(GL_TEXTURE_2D);
 
@@ -130,6 +131,27 @@ namespace ogl
     m_program.disable();
   }
 
+  void display_sensor_map() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    if(m_phero_map != NULL)
+      m_sensorTextureHandle = m_phero_map->s_build_sensor_texture();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_sensorTextureHandle);
+    
+    glBegin(GL_TRIANGLES); {
+      for(int i = 0; i < 6; i++) {
+	glTexCoord2f(vec_tex_coords[i].s, vec_tex_coords[i].t);
+	glVertex4f(vec_points[i].x, vec_points[i].y, vec_points[i].z, vec_points[i].w);
+      }
+    } glEnd();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  
   void reshape(int w, int h) {
     if(h == 0)
       h = 1;
